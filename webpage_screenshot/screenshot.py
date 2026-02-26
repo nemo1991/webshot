@@ -5,6 +5,7 @@
 import os
 import time
 import base64
+import sys
 from pathlib import Path
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
