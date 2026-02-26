@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+setup.py
+webpage_screenshot/__init__.py
+webpage_screenshot/cli.py
+webpage_screenshot/screenshot.py
+webpage_screenshot.egg-info/PKG-INFO
+webpage_screenshot.egg-info/SOURCES.txt
+webpage_screenshot.egg-info/dependency_links.txt
+webpage_screenshot.egg-info/entry_points.txt
+webpage_screenshot.egg-info/requires.txt
+webpage_screenshot.egg-info/top_level.txt
