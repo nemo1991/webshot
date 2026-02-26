@@ -1,0 +1,3 @@
+[console_scripts]
+screenshot = webpage_screenshot:main
+webpage-screenshot = webpage_screenshot:main
