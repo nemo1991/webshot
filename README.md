@@ -9,6 +9,23 @@
 pip install -e .
 ```
 
+### Docker 方式
+
+```bash
+# 构建镜像（当前平台）
+docker build -t webpage-screenshot .
+
+# 使用
+docker run --rm -v $(pwd):/output webpage-screenshot https://www.example.com -o /output/example.png
+
+# 构建指定平台镜像
+docker build -f Dockerfile.amd64 -t webpage-screenshot:amd64 .  # x86_64
+docker build -f Dockerfile.arm64 -t webpage-screenshot:arm64 .  # ARM64
+
+# 构建多平台镜像（需要先设置 buildx）
+docker buildx build --platform linux/amd64,linux/arm64 -t webpage-screenshot:latest --push .
+```
+
 ### 全局使用
 安装后可在命令行直接使用：
 ```bash
@@ -20,6 +37,11 @@ webpage-screenshot https://www.example.com -o output.png
 - Python 3.8+
 - Google Chrome 浏览器
 - Selenium 4.15.0+
+
+### Docker 依赖
+
+- Docker
+- 无需安装 Chrome 和 Python 依赖，镜像已包含完整环境
 
 ## 使用方法
 
@@ -94,4 +116,12 @@ take_screenshot(
     wait_time=3
 )
 ```
+
+# demo
+
+```
+webpage-screenshot https://mp.weixin.qq.com/s/JURbCsOTCYWssETvXOjoeg -o weixin.png --full-page --wait 5 
+
+```
+
 

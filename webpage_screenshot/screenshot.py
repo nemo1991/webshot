@@ -15,13 +15,14 @@ from selenium.webdriver.support.ui import WebDriverWait
 def find_chrome_binary():
     """查找 Chrome 浏览器路径"""
     paths_to_check = [
+        # Docker/Linux
+        "/usr/bin/google-chrome",
+        "/usr/bin/google-chrome-stable",
+        "/usr/bin/chromium",
+        "/usr/bin/chromium-browser",
         # macOS
         "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
         "/Applications/Google Chrome for Testing.app/Contents/MacOS/Google Chrome",
-        # Linux
-        "/usr/bin/google-chrome",
-        "/usr/bin/google-chrome-stable",
-        "/usr/bin/chromium-browser",
         # Windows
         r"C:\Program Files\Google\Chrome\Application\chrome.exe",
         r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
@@ -29,6 +30,26 @@ def find_chrome_binary():
     for path in paths_to_check:
         if os.path.exists(path):
             return path
+    # 检查环境变量
+    chrome_bin = os.environ.get("CHROME_BIN")
+    if chrome_bin and os.path.exists(chrome_bin):
+        return chrome_bin
+    return None
+
+
+def find_chromedriver():
+    """查找 ChromeDriver 路径"""
+    paths_to_check = [
+        "/usr/bin/chromedriver",
+        "/usr/local/bin/chromedriver",
+    ]
+    for path in paths_to_check:
+        if os.path.exists(path):
+            return path
+    # 检查环境变量
+    chromedriver = os.environ.get("CHROMEDRIVER")
+    if chromedriver and os.path.exists(chromedriver):
+        return chromedriver
     return None
 
 
@@ -46,6 +67,8 @@ def setup_driver(headless: bool = True, window_width: int = 1920,
     返回:
         Chrome WebDriver 实例
     """
+    from selenium.webdriver.chrome.service import Service
+
     chrome_options = Options()
 
     if headless:
@@ -64,7 +87,14 @@ def setup_driver(headless: bool = True, window_width: int = 1920,
         if verbose:
             print(f"使用 Chrome: {chrome_binary}", file=sys.stderr)
 
-    driver = webdriver.Chrome(options=chrome_options)
+    # 显式指定 chromedriver 路径
+    chromedriver_path = find_chromedriver()
+    if chromedriver_path:
+        service = Service(executable_path=chromedriver_path)
+        driver = webdriver.Chrome(service=service, options=chrome_options)
+    else:
+        driver = webdriver.Chrome(options=chrome_options)
+
     driver.set_page_load_timeout(30)
     return driver
 
@@ -87,16 +117,13 @@ def wait_for_page_loaded(driver, timeout: int = 30, verbose: bool = False) -> bo
             lambda d: d.execute_script("return document.readyState") == "complete"
         )
 
-        # 等待网络空闲（没有超过 2 个网络连接）
-        driver.execute_cdp_cmd("Network.enable", {})
+        # 等待网络空闲：检查页面资源是否仍在加载
         start_time = time.time()
         idle_threshold = 0.5  # 网络空闲判定阈值（秒）
         idle_start = None
 
         while time.time() - start_time < timeout:
-            # 检查是否有活跃的网络连接
-            result = driver.execute_cdp_cmd("Network.getConnectivity", {})
-            # 简单判断：检查页面是否有正在加载的资源
+            # 检查页面是否有正在加载的资源
             loading = driver.execute_script("""
                 return document.readyState !== 'complete' ||
                        window.performance?.getEntriesByType('resource')?.filter(
@@ -205,7 +232,7 @@ def take_screenshot(url: str, output_path: str = "screenshot.png",
         if full_page:
             total_height = driver.execute_script("return document.body.scrollHeight")
             total_width = driver.execute_script("return document.body.scrollWidth")
-            driver.set_window_size(max(total_width, window_width), window_height)
+            driver.set_window_size(max(total_width, window_width),max(total_height,window_height))
 
         result = driver.execute_cdp_cmd("Page.captureScreenshot", {
             "captureBeyondViewport": full_page,
