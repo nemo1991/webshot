@@ -15,8 +15,11 @@ pip install -e .
 # 构建镜像（当前平台）
 docker build -t webpage-screenshot .
 
-# 使用
+# CLI 使用
 docker run --rm -v $(pwd):/output webpage-screenshot https://www.example.com -o /output/example.png
+
+# API 服务使用
+docker run --rm -p 8000:8000 webpage-screenshot server --port 8000
 
 # 构建指定平台镜像
 docker build -f Dockerfile.amd64 -t webpage-screenshot:amd64 .  # x86_64
