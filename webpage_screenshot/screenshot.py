@@ -54,7 +54,8 @@ def find_chromedriver():
 
 
 def setup_driver(headless: bool = True, window_width: int = 1920,
-                 window_height: int = 1080, verbose: bool = True) -> webdriver.Chrome:
+                 window_height: int = 1080, verbose: bool = True,
+                 page_load_timeout: int = 60) -> webdriver.Chrome:
     """
     配置并返回 Chrome WebDriver
 
@@ -63,6 +64,7 @@ def setup_driver(headless: bool = True, window_width: int = 1920,
         window_width: 窗口宽度
         window_height: 窗口高度
         verbose: 是否显示详细信息
+        page_load_timeout: 页面加载超时时间（秒），默认 60 秒
 
     返回:
         Chrome WebDriver 实例
@@ -95,7 +97,7 @@ def setup_driver(headless: bool = True, window_width: int = 1920,
     else:
         driver = webdriver.Chrome(options=chrome_options)
 
-    driver.set_page_load_timeout(30)
+    driver.set_page_load_timeout(page_load_timeout)
     return driver
 
 

@@ -40,7 +40,6 @@ async def screenshot(params: ScreenshotParams) -> Response:
     - return_format=binary: 直接返回 PNG 图片
     - return_format=base64: 返回 JSON 包含 base64 编码的图片
     """
-    import sys
     from webpage_screenshot.screenshot import setup_driver, wait_for_page_loaded, wait_for_images_loaded
     from selenium.webdriver.support.ui import WebDriverWait
     import time
@@ -52,7 +51,8 @@ async def screenshot(params: ScreenshotParams) -> Response:
             headless=True,
             window_width=params.window_width,
             window_height=params.window_height,
-            verbose=False
+            verbose=False,
+            page_load_timeout=120  # 增加页面加载超时时间
         )
         driver.get(params.url)
 
