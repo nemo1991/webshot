@@ -10,11 +10,11 @@ WORKDIR /app
 # 非交互式安装
 ENV DEBIAN_FRONTEND=noninteractive
 
-# 使用国内源（Debian bookworm）
+# 使用国内源（Debian trixie - testing 版本）
 RUN rm -f /etc/apt/sources.list.d/debian.sources && \
-    echo "deb http://mirrors.aliyun.com/debian bookworm main contrib non-free non-free-firmware" > /etc/apt/sources.list && \
-    echo "deb http://mirrors.aliyun.com/debian bookworm-updates main contrib non-free non-free-firmware" >> /etc/apt/sources.list && \
-    echo "deb http://mirrors.aliyun.com/debian-security bookworm-security main contrib non-free non-free-firmware" >> /etc/apt/sources.list
+    echo "deb http://mirrors.aliyun.com/debian trixie main contrib non-free non-free-firmware" > /etc/apt/sources.list && \
+    echo "deb http://mirrors.aliyun.com/debian trixie-updates main contrib non-free non-free-firmware" >> /etc/apt/sources.list && \
+    echo "deb http://mirrors.aliyun.com/debian-security trixie-security main contrib non-free non-free-firmware" >> /etc/apt/sources.list
 
 # 配置 pip 使用清华源
 RUN pip config set global.index-url https://pypi.tuna.tsinghua.edu.cn/simple
