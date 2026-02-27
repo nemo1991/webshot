@@ -11,6 +11,9 @@ pip install -e .
 # Run CLI
 webpage-screenshot https://example.com -o output.png
 
+# Start HTTP API server
+webpage-screenshot-server --port 8000
+
 # Docker
 docker build -t webpage-screenshot .
 docker run --rm -v $(pwd):/output webpage-screenshot https://example.com -o /output/example.png

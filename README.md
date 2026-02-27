@@ -32,6 +32,36 @@ docker buildx build --platform linux/amd64,linux/arm64 -t webpage-screenshot:lat
 webpage-screenshot https://www.example.com -o output.png
 ```
 
+### HTTP API 服务
+启动服务器：
+```bash
+webpage-screenshot-server --port 8000
+```
+
+调用接口：
+```bash
+# 直接返回图片
+curl -X POST http://localhost:8000/screenshot \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.example.com"}' \
+  -o screenshot.png
+
+# 返回 base64 编码
+curl -X POST http://localhost:8000/screenshot \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://www.example.com", "return_format": "base64"}'
+
+# 完整页面截图并保存
+curl -X POST http://localhost:8000/screenshot \
+  -H "Content-Type: application/json" \
+  -d '{"url": "https://github.com", "full_page": true, "output_path": "github.png"}'
+
+# 健康检查
+curl http://localhost:8000/health
+```
+
+API 文档：访问 `http://localhost:8000/docs` 查看 Swagger UI 交互式文档。
+
 ## 依赖
 
 - Python 3.8+
