@@ -33,3 +33,15 @@ Thumbs.db
 *.png
 *.jpg
 *.jpeg
+
+# Git
+.git/
+.gitignore
+
+# Docker
+Dockerfile*
+.dockerignore
+
+# Documentation
+*.md
+!README.md

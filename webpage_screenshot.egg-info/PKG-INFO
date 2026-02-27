@@ -121,3 +121,11 @@ take_screenshot(
 )
 ```
 
+# demo
+
+```
+webpage-screenshot https://mp.weixin.qq.com/s/JURbCsOTCYWssETvXOjoeg -o weixin.png --full-page --wait 5 
+
+```
+
+
