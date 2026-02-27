@@ -29,8 +29,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     chromium chromium-driver \
     # 基础字体
     fonts-liberation fonts-dejavu-core fonts-dejavu-extra \
-    # 中文字体（思源黑体）
+    # 中文字体（文泉驿微米黑 - 类似微软雅黑，思源黑体）
+    fonts-wqy-microhei fonts-wqy-zenhei \
     fonts-noto-cjk fonts-noto-cjk-extra \
+    # 字体配置
+    fontconfig \
     # 系统依赖
     libasound2 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 \
     libcups2 libdbus-1-3 libdrm2 libgbm1 libgtk-3-0 \

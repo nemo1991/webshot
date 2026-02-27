@@ -16,10 +16,10 @@ pip install -e .
 docker build -t webpage-screenshot .
 
 # API 服务使用（默认模式）
-docker run --rm -p 8000:8000 webpage-screenshot
+docker run --rm -p 8000:8000 --shm-size=2gb webpage-screenshot
 
 # CLI 使用
-docker run --rm -v $(pwd):/output webpage-screenshot webpage-screenshot https://www.example.com -o /output/example.png
+docker run --rm -v $(pwd):/output --shm-size=2gb webpage-screenshot webpage-screenshot https://www.example.com -o /output/example.png
 
 # 构建指定平台镜像
 docker build -f Dockerfile.amd64 -t webpage-screenshot:amd64 .  # x86_64
@@ -28,6 +28,8 @@ docker build -f Dockerfile.arm64 -t webpage-screenshot:arm64 .  # ARM64
 # 构建多平台镜像（需要先设置 buildx）
 docker buildx build --platform linux/amd64,linux/arm64 -t webpage-screenshot:latest --push .
 ```
+
+注意：`--shm-size=2gb` 用于增加 Docker 容器的共享内存，避免 Chrome 崩溃。
 
 ### 全局使用
 安装后可在命令行直接使用：
@@ -154,6 +156,11 @@ take_screenshot(
 
 ```
 webpage-screenshot https://mp.weixin.qq.com/s/JURbCsOTCYWssETvXOjoeg -o weixin.png --full-page --wait 5 
+crpi-sd251gdf7qgra3xz.cn-hangzhou.personal.cr.aliyuncs.com/tiarea/webpage-screenshot-amd64:2.0
+
+crpi-sd251gdf7qgra3xz.cn-hangzhou.personal.cr.aliyuncs.com/tiarea/webpage-screenshot-amd64:2.0
+
+docker run --rm -p 8000:8000 --shm-size=2gb crpi-sd251gdf7qgra3xz.cn-hangzhou.personal.cr.aliyuncs.com/tiarea/webpage-screenshot-amd64:2.0
 
 ```
 
