@@ -7,7 +7,10 @@
       "Bash(mamba run:)",
       "Bash(mamba run:*)",
       "Bash(pkill:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git:*)",
+      "WebSearch"
     ]
   }
 }

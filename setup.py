@@ -19,6 +19,9 @@ setup(
         "uvicorn>=0.23.0",
         "pydantic>=2.0.0",
     ],
+    extras_require={
+        "drission": ["DrissionPage>=4.0.0"],
+    },
     entry_points={
         "console_scripts": [
             "webpage-screenshot=webpage_screenshot:main",

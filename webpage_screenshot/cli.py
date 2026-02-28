@@ -44,6 +44,8 @@ def get_screenshot_parser() -> argparse.ArgumentParser:
                         help="会话名称，使用已保存的登录状态")
     parser.add_argument("--uc", action="store_true",
                         help="使用 undetected-chromedriver（增强反检测）")
+    parser.add_argument("--drission", action="store_true",
+                        help="使用 DrissionPage（更强反检测，需安装）")
     parser.add_argument("-q", "--quiet", action="store_true",
                         help="安静模式，不输出详细信息")
 
@@ -268,6 +270,25 @@ def run_screenshot(args) -> int:
         if not getattr(args, 'quiet', False):
             print(f"自动添加协议前缀：{url}", file=sys.stderr)
 
+    # 使用 DrissionPage
+    if getattr(args, 'drission', False):
+        try:
+            from webpage_screenshot.drission import take_screenshot_drission
+            success = take_screenshot_drission(
+                url=url,
+                output_path=args.output,
+                headless=not getattr(args, 'visible', False),
+                full_page=getattr(args, 'full_page', True),
+                wait_time=getattr(args, 'wait', 3),
+                verbose=not getattr(args, 'quiet', False),
+                session_name=getattr(args, 'session', None)
+            )
+            return 0 if success else 1
+        except ImportError:
+            print("错误：DrissionPage 未安装，请运行：pip install DrissionPage", file=sys.stderr)
+            return 1
+
+    # 使用普通 Selenium
     success = take_screenshot(
         url=url,
         output_path=args.output,
