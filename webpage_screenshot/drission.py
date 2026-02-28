@@ -64,7 +64,6 @@ def setup_drission_page(headless: bool = False, window_width: int = 1920,
 
     # 配置 Chrome 选项
     co = ChromiumOptions()
-    co.set_binary_path(chrome_binary)
     co.set_argument('--no-sandbox')
     co.set_argument('--disable-gpu')
     co.set_argument('--disable-dev-shm-usage')
@@ -87,8 +86,8 @@ def setup_drission_page(headless: bool = False, window_width: int = 1920,
     if verbose:
         print(f"使用 Chrome: {chrome_binary}", file=sys.stderr)
 
-    # 启动浏览器
-    page = ChromiumPage(co)
+    # 启动浏览器 - 传入配置对象
+    page = ChromiumPage(addr_or_opts=co)
     return page
 
 

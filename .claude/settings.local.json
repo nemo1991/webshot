@@ -10,7 +10,8 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git:*)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:g1879.github.io)"
     ]
   }
 }
