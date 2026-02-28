@@ -15,6 +15,9 @@ setup(
     python_requires=">=3.8",
     install_requires=[
         "selenium>=4.15.0",
+        "fastapi>=0.100.0",
+        "uvicorn>=0.23.0",
+        "pydantic>=2.0.0",
     ],
     entry_points={
         "console_scripts": [

@@ -7,6 +7,7 @@ import time
 import base64
 import sys
 from pathlib import Path
+from typing import Optional
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.support.ui import WebDriverWait
@@ -55,7 +56,10 @@ def find_chromedriver():
 
 def setup_driver(headless: bool = True, window_width: int = 1920,
                  window_height: int = 1080, verbose: bool = True,
-                 page_load_timeout: int = 60) -> webdriver.Chrome:
+                 page_load_timeout: int = 60,
+                 session_name: Optional[str] = None,
+                 user_data_dir: Optional[str] = None,
+                 disable_automation_detection: bool = True) -> webdriver.Chrome:
     """
     配置并返回 Chrome WebDriver
 
@@ -65,6 +69,9 @@ def setup_driver(headless: bool = True, window_width: int = 1920,
         window_height: 窗口高度
         verbose: 是否显示详细信息
         page_load_timeout: 页面加载超时时间（秒），默认 60 秒
+        session_name: 会话名称（可选），使用已保存的登录状态
+        user_data_dir: 用户数据目录路径（可选），与 session_name 互斥
+        disable_automation_detection: 是否禁用自动化检测（默认启用）
 
     返回:
         Chrome WebDriver 实例
@@ -80,8 +87,38 @@ def setup_driver(headless: bool = True, window_width: int = 1920,
     chrome_options.add_argument("--disable-gpu")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-    chrome_options.add_argument("--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
+
+    # 反检测配置
+    if disable_automation_detection:
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        chrome_options.add_argument("--disable-features=IsolateOrigins,site-per-process")
+        chrome_options.add_argument("--disable-site-isolation-trials")
+
+    # 使用真实的 User-Agent
+    chrome_options.add_argument("--user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36")
+
+    # 禁用 WebDriver 特征
+    if disable_automation_detection:
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option("useAutomationExtension", False)
+
+    # 处理会话持久化
+    if session_name and user_data_dir:
+        raise ValueError("session_name 和 user_data_dir 不能同时使用")
+
+    if session_name:
+        from webpage_screenshot.session import get_session_dir, create_session
+        user_data = get_session_dir(session_name)
+        # 如果会话不存在，先创建
+        if not os.path.exists(user_data):
+            create_session(session_name)
+        chrome_options.add_argument(f"--user-data-dir={user_data}")
+        if verbose:
+            print(f"使用会话目录：{user_data}", file=sys.stderr)
+    elif user_data_dir:
+        chrome_options.add_argument(f"--user-data-dir={user_data_dir}")
+        if verbose:
+            print(f"使用用户数据目录：{user_data_dir}", file=sys.stderr)
 
     chrome_binary = find_chrome_binary()
     if chrome_binary:
@@ -96,6 +133,27 @@ def setup_driver(headless: bool = True, window_width: int = 1920,
         driver = webdriver.Chrome(service=service, options=chrome_options)
     else:
         driver = webdriver.Chrome(options=chrome_options)
+
+    # 执行 CDP 命令绕过检测
+    if disable_automation_detection:
+        driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+            "source": """
+                // 删除 navigator.webdriver 属性
+                delete navigator.webdriver;
+
+                // 覆盖 permissions 查询
+                const originalQuery = window.navigator.permissions.query;
+                window.navigator.permissions.query = (parameters) => (
+                    parameters.name === 'notifications' ?
+                        Promise.resolve({ state: Notification.permission }) :
+                        originalQuery(parameters)
+                );
+
+                // 伪装 Chrome 属性
+                Object.defineProperty(navigator, 'plugins', { get: () => [1, 2, 3, 4, 5] });
+                Object.defineProperty(navigator, 'languages', { get: () => ['en-US', 'en', 'zh-CN'] });
+            """
+        })
 
     driver.set_page_load_timeout(page_load_timeout)
     return driver
@@ -193,7 +251,9 @@ def take_screenshot(url: str, output_path: str = "screenshot.png",
                     headless: bool = True, full_page: bool = True,
                     wait_time: int = 3, auto_wait: bool = True,
                     window_width: int = 1920, window_height: int = 1080,
-                    verbose: bool = True) -> bool:
+                    verbose: bool = True,
+                    session_name: Optional[str] = None,
+                    use_uc: bool = False) -> bool:
     """
     访问网页并保存为图片
 
@@ -207,17 +267,42 @@ def take_screenshot(url: str, output_path: str = "screenshot.png",
         window_width: 窗口宽度
         window_height: 窗口高度
         verbose: 是否显示详细信息
+        session_name: 会话名称（可选），使用已保存的登录状态
+        use_uc: 是否使用 undetected-chromedriver（增强反检测）
 
     返回:
         bool: 操作是否成功
     """
     import sys
+
+    # 使用 undetected-chromedriver
+    if use_uc:
+        from webpage_screenshot.screenshot_enhanced import take_screenshot_uc
+        return take_screenshot_uc(
+            url=url,
+            output_path=output_path,
+            headless=headless,
+            full_page=full_page,
+            wait_time=wait_time,
+            auto_wait=auto_wait,
+            window_width=window_width,
+            window_height=window_height,
+            verbose=verbose,
+            session_name=session_name
+        )
+
     driver = None
     try:
         if verbose:
             print(f"正在访问：{url}", file=sys.stderr)
 
-        driver = setup_driver(headless, window_width, window_height, verbose)
+        driver = setup_driver(
+            headless=headless,
+            window_width=window_width,
+            window_height=window_height,
+            verbose=verbose,
+            session_name=session_name
+        )
         driver.get(url)
 
         if auto_wait:

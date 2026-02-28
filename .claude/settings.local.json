@@ -3,7 +3,11 @@
     "allow": [
       "Bash(pip3 install:*)",
       "Bash(webpage-screenshot:*)",
-      "Bash(chmod +x:*)"
+      "Bash(chmod +x:*)",
+      "Bash(mamba run:)",
+      "Bash(mamba run:*)",
+      "Bash(pkill:*)",
+      "Bash(git add:*)"
     ]
   }
 }

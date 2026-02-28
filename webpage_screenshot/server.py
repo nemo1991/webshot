@@ -29,6 +29,7 @@ class ScreenshotParams(BaseModel):
     window_width: int = 1920
     window_height: int = 1080
     return_format: str = "binary"  # "binary" or "base64"
+    session_name: Optional[str] = None  # 会话名称
 
 
 @app.post("/screenshot")
@@ -52,7 +53,8 @@ async def screenshot(params: ScreenshotParams) -> Response:
             window_width=params.window_width,
             window_height=params.window_height,
             verbose=False,
-            page_load_timeout=120  # 增加页面加载超时时间
+            page_load_timeout=120,  # 增加页面加载超时时间
+            session_name=params.session_name
         )
         driver.get(params.url)
 
@@ -102,6 +104,86 @@ async def screenshot(params: ScreenshotParams) -> Response:
 async def health_check():
     """健康检查接口"""
     return {"status": "ok"}
+
+
+# ========== 会话管理 API ==========
+
+from pydantic import BaseModel
+
+
+class SessionCreate(BaseModel):
+    """创建会话请求"""
+    name: str
+
+
+class SessionInfo(BaseModel):
+    """会话信息响应"""
+    name: str
+    path: str
+    size_bytes: int
+    file_count: int
+    created_time: float
+    modified_time: float
+
+
+@app.get("/sessions", response_model=list[str], tags=["Session Management"])
+async def list_sessions_api():
+    """列出所有会话"""
+    from webpage_screenshot.session import list_sessions
+    return list_sessions()
+
+
+@app.get("/sessions/{session_name}", response_model=SessionInfo, tags=["Session Management"])
+async def get_session_api(session_name: str):
+    """获取会话详细信息"""
+    from webpage_screenshot.session import get_session_info
+    try:
+        info = get_session_info(session_name)
+        return SessionInfo(**info)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.post("/sessions", response_model=dict, tags=["Session Management"])
+async def create_session_api(session: SessionCreate):
+    """创建新会话"""
+    from webpage_screenshot.session import create_session
+    try:
+        session_dir = create_session(session.name)
+        return {"success": True, "path": session_dir}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.delete("/sessions/{session_name}", response_model=dict, tags=["Session Management"])
+async def delete_session_api(session_name: str):
+    """删除会话"""
+    from webpage_screenshot.session import delete_session
+    try:
+        delete_session(session_name)
+        return {"success": True}
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.post("/sessions/{session_name}/login", response_model=dict, tags=["Session Management"])
+async def login_session_api(session_name: str, url: str, headless: bool = True):
+    """
+    启动浏览器登录会话
+
+    注意：此接口在服务器模式下可能无法正常工作，因为浏览器需要在可见模式下登录。
+    建议在本地使用 CLI 命令进行登录操作。
+    """
+    from webpage_screenshot.session import launch_browser_for_login
+    try:
+        # 在服务器模式下，默认使用无头模式
+        success = launch_browser_for_login(url, session_name, headless=headless)
+        if success:
+            return {"success": True, "message": "登录完成，会话已保存"}
+        else:
+            raise HTTPException(status_code=500, detail="启动浏览器失败")
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 def run_server():
